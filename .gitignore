@@ -1,0 +1,24 @@
+# ignore all model files, job files and test files
+jobs/*
+test/*
+*result*
+*video*
+# ignore all pyc
+*.pyc
+
+# ignore all lib files which can be built by makefile
+*.so
+
+# nohub file
+*.out
+*.log
+
+# VScode
+.vscode/*
+
+# Video files
+*.mp4
+*.avi
+
+# ignore built file
+*build*
