@@ -3,11 +3,13 @@
  * @Date: 2019-01-08 14:31:09
  * @LastEditors: Jilong Wang
  * @Email: jilong.wang@watrix.ai
- * @LastEditTime: 2019-01-08 14:43:36
+ * @LastEditTime: 2019-01-08 14:56:03
  * @Description: file content
  -->
 
 # Extract gait segementation from videos
+
+[![License](https://img.shields.io/badge/license-BSD-blue.svg)](LICENSE)
 
 this project uses modified refineDet model and openpose model.
 We provided a 250FPS(on Titan Xp) pedestrian detection RefineDet model(using res18 and reducing refineDet head channels).
@@ -32,16 +34,14 @@ We provided a 250FPS(on Titan Xp) pedestrian detection RefineDet model(using res
 
 Or you can use camke-gui
 
-* open cmake-gui
-* create $GaitExtractor_ROOT/build
-* press configure button.
-* when configuration is done, press generate button
-* quit camke
+* Open cmake-gui
+* Create $GaitExtractor_ROOT/build
+* Press configure button.
+* When configuration is done, press generate button
+* Quit camke
 
   ```Shell
   cd $GaitExtractor_ROOT
-  # Modify Makefile.config according to your Caffe installation.
-  # Make sure to include $GaitExtractor_ROOT/python to your PYTHONPATH.
   cd build
   make -j8
   ```
