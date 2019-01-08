@@ -3,7 +3,7 @@
 @Date: 2019-01-05 17:47:31
 @LastEditors: Jilong Wang
 @Email: jilong.wang@watrix.ai
-@LastEditTime: 2019-01-08 15:31:57
+@LastEditTime: 2019-01-08 15:45:54
 @Description: Gait extractor. Supporting single video file extraction{pass the video file path} and mutli-videos extraction{pass the video folder path}
 '''
 import cv2
@@ -76,7 +76,7 @@ if __name__ == '__main__':
         os.mkdir(out_dir)
         start_time = time.time()
         print 'Detecting pedestrian.....'
-        cmd = "python get_gait.py --gpuid {} --out-dir {} --test-set {}".format(args.gpuid, out_dir, frame_save_dir.split('/')[-1])
+        cmd = "python get_gait.py --gpuid {} --out-dir {} --test-set {}".format(args.gpuid, out_dir, frame_save_dir)
         print(cmd)
         process = subprocess.Popen(cmd.split(), stdout=subprocess.PIPE)
         # output = process.communicate()
