@@ -3,7 +3,7 @@
 @Date: 2019-01-05 14:44:14
 @LastEditors: Jilong Wang
 @Email: jilong.wang@watrix.ai
-@LastEditTime: 2019-01-07 19:12:15
+@LastEditTime: 2019-01-08 10:12:21
 @Description: In this script, we will load a RefineDet model to detect pedestrian and use openpose to check the integrity of each pedestrian.
 '''
 import argparse
@@ -24,7 +24,7 @@ from caffe.proto import caffe_pb2
 
 def save_results(frame_main_role, img_dir, save_dir):
     # last_frame = check_last_1s(frame_main_role, img_dir)
-    # if having enough frames, then abort the first 5 frame and last 10 frames in order to have intact person
+    # if having enough frames, then abort the first 5 frame and last 25 frames in order to have intact person
     if len(frame_main_role) < 30:
         first_frame = 5
         last_frame = -10
@@ -39,22 +39,6 @@ def save_results(frame_main_role, img_dir, save_dir):
         cv2.imwrite(os.path.join(save_dir, im_name[:-4] + '_dets.jpg'), op_image)
         print 'Saved: ' + os.path.join(save_dir, im_name[:-4] + '_dets.jpg')
         sys.stdout.flush()
-
-# def check_last_1s(frame_main_role, img_dir):
-#     '''
-#     @description: find the last frame where the main role is still intact.
-#     @param {frame_main_role, img_dir->where the origin picture saved} 
-#     @return: 
-#     '''
-#     for i, pack in enumerate(frame_main_role[-25:-20]):
-#         im_name, coord = pack
-#         img = cv2.imread(os.path.join(img_dir, im_name))
-#         xmin, xmax, ymin, ymax = coord
-#         op_image = img[ymin:ymax, xmin:xmax]
-#         if openpose(op_image, model='strict') < 7:
-#             return len(frame_main_role) - 25 + i
-        
-#     return len(frame_main_role) - 1
             
 def openpose(op_image, model='not strict'):
     '''
@@ -205,6 +189,8 @@ def find_max(results, threshold, shape):
             Xmax = xmax
             Ymin = ymin
             Ymax = ymax
+    
+    # expand 5% border
     height = Ymax - Ymin
     width = Xmax - Xmin
     h = int(round(height * 0.05))
@@ -213,22 +199,15 @@ def find_max(results, threshold, shape):
     Ymin -= h
     Xmax += w
     Ymax += h
-    if Xmin < 0:
-        Xmin = 0
-    if Xmax < 0:
-        Xmax = 0
-    if Xmin > 1920:
-        Xmin = 1920
-    if Xmax > 1920:
-        Xmax = 1920
-    if Ymin < 0:
-        Ymin = 0
-    if Ymax < 0:
-        Ymax = 0
-    if Ymin > 1080:
-        Ymin = 1080
-    if Ymax > 1080:
-        Ymax = 1080
+    # check border
+    Xmin = 0 if Xmin < 0 else Xmin
+    Xmax = 0 if Xmax < 0 else Xmax
+    Xmin = 1920 if Xmin > 1920 else Xmin
+    Xmax = 1920 if Xmax > 1920 else Xmax
+    Ymin = 0 if Ymin < 0 else Ymin
+    Ymax = 0 if Ymax < 0 else Ymax
+    Ymin = 1080 if Ymin > 1080 else Ymin
+    Ymax = 1080 if Ymax > 1080 else Ymax
     return Xmin, Xmax, Ymin, Ymax
 
 def is_main_role(coord1, coord2):
@@ -380,6 +359,3 @@ if __name__ == '__main__':
     frame_result = detect(test_set, det_net, transformer,det_batch_size=batch_size)
     frame_main_role = find_main_role_in_each_frame(frame_result)
     save_results(frame_main_role, test_set, save_dir)
-
-
-
