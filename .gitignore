@@ -25,4 +25,4 @@ test/*
 
 # ignore all caffemodels
 
-*caffemodels
+*caffemodel

@@ -3,7 +3,7 @@
 @Date: 2019-01-05 17:47:31
 @LastEditors: Jilong Wang
 @Email: jilong.wang@watrix.ai
-@LastEditTime: 2019-01-08 14:21:51
+@LastEditTime: 2019-01-08 15:31:57
 @Description: Gait extractor. Supporting single video file extraction{pass the video file path} and mutli-videos extraction{pass the video folder path}
 '''
 import cv2
@@ -39,7 +39,7 @@ if __name__ == '__main__':
 
     cost = 0
     for video_name in video_names:
-        frame_save_dir = './videoframe-'+ os.path.basename(video_name)[:-4]
+        frame_save_dir = './videoframes/videoframe-'+ os.path.basename(video_name)[:-4]
 
         # split video into frame pictures
         cap = cv2.VideoCapture(video_name)
@@ -69,14 +69,14 @@ if __name__ == '__main__':
         cap.release()
         
         # gait picture save path
-        out_dir = 'result-' + os.path.basename(video_name)[:-4]
+        out_dir = './results/result-' + os.path.basename(video_name)[:-4]
         
         if os.path.exists(out_dir):
             shutil.rmtree(out_dir)
         os.mkdir(out_dir)
         start_time = time.time()
         print 'Detecting pedestrian.....'
-        cmd = "python get_gait --gpuid {} --out-dir {} --test-set {}".format(args.gpuid, out_dir, frame_save_dir.split('/')[-1])
+        cmd = "python get_gait.py --gpuid {} --out-dir {} --test-set {}".format(args.gpuid, out_dir, frame_save_dir.split('/')[-1])
         print(cmd)
         process = subprocess.Popen(cmd.split(), stdout=subprocess.PIPE)
         # output = process.communicate()
