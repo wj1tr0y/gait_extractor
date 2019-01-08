@@ -3,7 +3,7 @@
 @Date: 2019-01-05 14:44:14
 @LastEditors: Jilong Wang
 @Email: jilong.wang@watrix.ai
-@LastEditTime: 2019-01-08 14:13:35
+@LastEditTime: 2019-01-08 14:21:22
 @Description: In this script, we will load a RefineDet model to detect pedestrian and use openpose to check the integrity of each pedestrian.
 finally, we will use a small segmentation model to seg person in each frame then save the result.
 '''
@@ -18,7 +18,7 @@ import cv2
 import time
 
 os.environ['GLOG_minloglevel'] = '3'
-# Make sure that caffe is on the python path:
+# Make sure that caffe is on the python path:x
 caffe_root = './'
 os.chdir(caffe_root)
 sys.path.insert(0, os.path.join(caffe_root, 'python'))

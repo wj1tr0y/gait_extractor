@@ -22,3 +22,7 @@ test/*
 
 # ignore built file
 *build*
+
+# ignore all caffemodels
+
+*caffemodels
