@@ -3,7 +3,7 @@
 @Date: 2019-01-07 16:08:19
 @LastEditors: Jilong Wang
 @Email: jilong.wang@watrix.ai
-@LastEditTime: 2019-01-08 16:15:31
+@LastEditTime: 2019-01-08 18:49:53
 @Description: file content
 '''
 import cv2
@@ -38,12 +38,13 @@ POSE_PAIRS = [[0, 1], [1, 2], [2, 3], [3, 4], [4, 5], [5, 6], [6, 7], [7, 8], [8
 
 
 # Read Image
-im = cv2.imread("./videoframes/videoframe-011_scene1_bg_H_045_1/frame120.jpg")
+# im = cv2.imread("./videoframes/videoframe-005-nm-05-108/frame259.jpg")
+im = cv2.imread("./frame272_dets.jpg")
 im = cv2.cvtColor(im, cv2.COLOR_BGR2RGB)
 
 start_time = time.time()
 # Convert image to blob
-ratio = 368.0 / im.shape[0]
+ratio = 1
 inWidth = int(round(im.shape[1] * ratio))
 inHeight = int(round(im.shape[0] * ratio))
 
@@ -106,7 +107,7 @@ imPoints = im.copy()
 imSkeleton = im.copy()
 # Draw points
 for i, p in enumerate(points):
-    cv2.circle(imPoints, p, 8, (255, 255,0), thickness=-1, lineType=cv2.FILLED)
+    cv2.circle(imPoints, p, 2, (255, 255,0), thickness=-1, lineType=cv2.FILLED)
 plt.figure(); plt.axis('off'); plt.imshow(imPoints)
 plt.show()
 

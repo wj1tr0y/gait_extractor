@@ -3,7 +3,7 @@
 @Date: 2019-01-05 14:44:14
 @LastEditors: Jilong Wang
 @Email: jilong.wang@watrix.ai
-@LastEditTime: 2019-01-08 18:15:17
+@LastEditTime: 2019-01-08 19:01:34
 @Description: In this script, we will load a RefineDet model to detect pedestrian and use openpose to check the integrity of each pedestrian.
 finally, we will use a small segmentation model to seg person in each frame then save the result.
 '''
@@ -110,7 +110,7 @@ class OpenPose:
         # plt.show()
         # detection image preprocessing
         if self.width == -1:
-            ratio = self.height / op_image.shape[0]
+            ratio = 1
             inWidth = int(round(op_image.shape[1] * ratio))
             inHeight = int(round(op_image.shape[0] * ratio))
         else:
@@ -257,11 +257,11 @@ def check_last_1s(frame_main_role, img_dir):
         im_name, coord = pack
         img = cv2.imread(os.path.join(img_dir, im_name), cv2.IMREAD_COLOR)
         xmin, xmax, ymin, ymax = coord
-        op_image = img[ymin:ymax, xmin:xmax, :]
-        if op_net.get_keypoints(op_image, model='strict') !=7 :
+        op_image = img[ymin:ymax, xmin:xmax]
+
+        if op_net.get_keypoints(op_image) != 7:
             return len(frame_main_role) - 25 + i
     return len(frame_main_role)
-
     
 def find_max(results, threshold, shape):
     max_area = 0
@@ -288,8 +288,8 @@ def find_max(results, threshold, shape):
     # expand 5% border
     height = Ymax - Ymin
     width = Xmax - Xmin
-    h = int(round(height * 0.05))
-    w = int(round(width * 0.05))
+    h = int(round(height * 0.2))
+    w = int(round(width * 0.25))
     Xmin -= w
     Ymin -= h
     Xmax += w
@@ -297,12 +297,12 @@ def find_max(results, threshold, shape):
     # check border
     Xmin = 0 if Xmin < 0 else Xmin
     Xmax = 0 if Xmax < 0 else Xmax
-    Xmin = 1920 if Xmin > 1920 else Xmin
-    Xmax = 1920 if Xmax > 1920 else Xmax
+    Xmin = SHAPE[1] if Xmin > SHAPE[1] else Xmin
+    Xmax = SHAPE[1] if Xmax > SHAPE[1] else Xmax
     Ymin = 0 if Ymin < 0 else Ymin
     Ymax = 0 if Ymax < 0 else Ymax
-    Ymin = 1080 if Ymin > 1080 else Ymin
-    Ymax = 1080 if Ymax > 1080 else Ymax
+    Ymin = SHAPE[0] if Ymin > SHAPE[0] else Ymin
+    Ymax = SHAPE[0] if Ymax > SHAPE[0] else Ymax
     return Xmin, Xmax, Ymin, Ymax
 
 def is_main_role(coord1, coord2):
@@ -317,9 +317,10 @@ def is_main_role(coord1, coord2):
     x2_center = (coord2[0] + coord2[1])
     y2_center = (coord2[2] + coord2[3])
     distance = (x1_center - x2_center) ** 2 + (y1_center - y2_center) ** 2
-    if distance < (SHAPE[0]*0.1)**2 and x1_center != 0 and y1_center != 0:
+    if distance < (SHAPE[0]*0.3)**2 and x1_center != 0 and y1_center != 0:
         return True
     else:
+        print(coord1, coord2, distance)
         return False
 
 def find_first_main_role(frame_result):
@@ -334,7 +335,7 @@ def find_first_main_role(frame_result):
     # find main role in each frame
     for i in range(0, len(frame_result), 5):
         im_name, result, shape = frame_result[i]
-        xmin, xmax, ymin, ymax = find_max(result, 0.60, shape)
+        xmin, xmax, ymin, ymax = find_max(result, 0.50, shape)
         img = cv2.imread(os.path.join(img_dir, im_name))
         op_image = img[ymin:ymax, xmin:xmax]
         # print("checking frame {}".format(i))
@@ -354,23 +355,29 @@ def find_first_main_role(frame_result):
             max_area = area
             max_index = i
             main_role_coord = [xmin, xmax, ymin, ymax]
+
     try:
         first_index = roles[0][0]
     except:
         print('there is no person in this video!')
         shutil.rmtree(save_dir)
         sys.exit(0)
+        
     if first_index == max_index:
         return max_index, main_role_coord
+        
+    # from the frame which contains the largest role then go back to find the first frame where the role appear
     search_frame = frame_result[first_index: max_index]
     search_frame.reverse()
     for i in range(len(search_frame)):
         im_name, result, shape = search_frame[i]
-        xmin, xmax, ymin, ymax = find_max(result, 0.80, shape)
+        xmin, xmax, ymin, ymax = find_max(result, 0.50, shape)
         if is_main_role([xmin, xmax, ymin, ymax], main_role_coord):
             first_frame = max_index - i
             main_role_coord = [xmin, xmax, ymin, ymax]
-
+    
+    print('firstFrame:{}, {}'.format(first_frame, [xmin, xmax, ymin, ymax]))
+    sys.stdout.flush()
     return first_frame, [xmin, xmax, ymin, ymax]
 
 def find_main_role_in_each_frame(frame_result):
@@ -385,7 +392,7 @@ def find_main_role_in_each_frame(frame_result):
     # print('first frame is {}'.format(first_frame))
     # sys.stdout.flush()
     for im_name, result, shape in frame_result[first_frame:]:
-        xmin, xmax, ymin, ymax = find_max(result, 0.60, shape)
+        xmin, xmax, ymin, ymax = find_max(result, 0.50, shape)
 
         if is_main_role([xmin, xmax, ymin, ymax], main_role_coord):
             main_role_coord = [xmin, xmax, ymin, ymax]
@@ -410,6 +417,7 @@ def is_moving(coord, still_coord):
         return False
         
 def delete_still_frame(frame_main_role):
+    print(len(frame_main_role))
     main_role_coord = frame_main_role[0][1]
     for i, pack in enumerate(frame_main_role):
         _, coord = pack
