@@ -3,7 +3,7 @@
 @Date: 2019-01-05 17:47:31
 @LastEditors: Jilong Wang
 @Email: jilong.wang@watrix.ai
-@LastEditTime: 2019-01-08 18:01:32
+@LastEditTime: 2019-01-08 18:04:57
 @Description: Gait extractor. Supporting single video file extraction{pass the video file path} and mutli-videos extraction{pass the video folder path}
 '''
 import cv2
@@ -26,29 +26,24 @@ if __name__ == '__main__':
     args = parser.parse_args()
     assert len(args.gpuid) == 1, "You only need to choose one gpu. But {} gpus are chosen.".format(args.gpuid)
 
-    video_name = args.video
+    
     SET_TEST = False
-    if os.path.isdir(video_name):
+    if os.path.isdir(args.video):
         SET_TEST = True
-    elif not os.path.exists(video_name):
-        print "{} doesn't exist.".format(video_name)
+    elif not os.path.exists(args.video):
+        print "{} doesn't exist.".format(args.video)
 
-    video_names = [video_name]
+    video_names = [args.video]
     
     if SET_TEST:
-        video_names = os.listdir(video_name)
-    
-    print(video_names)
+        video_names = os.listdir(args.video)
+        video_names = [os.path.join(args.video, x) for x in video_names]
     
     cost = 0
     for video_name in video_names:
         frame_save_dir = './videoframes/videoframe-'+ os.path.basename(video_name)[:-4]
 
         # split video into frame pictures
-        cap = cv2.VideoCapture(video_name)
-        fps = cap.get(cv2.CAP_PROP_FPS)
-        size = (int(cap.get(cv2.CAP_PROP_FRAME_WIDTH)),
-            int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT)))
         if not os.path.exists(frame_save_dir):
             os.mkdir(frame_save_dir)
             cap = cv2.VideoCapture(video_name)
