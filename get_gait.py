@@ -3,7 +3,7 @@
 @Date: 2019-01-05 14:44:14
 @LastEditors: Jilong Wang
 @Email: jilong.wang@watrix.ai
-@LastEditTime: 2019-01-08 15:54:39
+@LastEditTime: 2019-01-08 16:20:13
 @Description: In this script, we will load a RefineDet model to detect pedestrian and use openpose to check the integrity of each pedestrian.
 finally, we will use a small segmentation model to seg person in each frame then save the result.
 '''
@@ -92,13 +92,12 @@ class PeopleDetection:
         sys.stdout.flush
         return frame_result
 
-
 class OpenPose:
     def __init__(self, modelDeployFile,  modelWeightsFile,  threshold=0.1,  width=-1, height=192.0):
         self.height = height
         self.width = width
         self.threshold = threshold
-        self.net = cv2.dnn.readNetFromCaffe(modelDeployFile, modelWeightsFile)
+        self.net = caffe.Net(modelDeployFile, modelWeightsFile, caffe.TEST)
 
     def get_keypoints(self, op_image,  model='not strict'):
         '''
@@ -115,10 +114,15 @@ class OpenPose:
             inWidth = self.width
             inHeight = self.height
 
-        netInputSize = (inWidth, inHeight)
-        inpBlob = cv2.dnn.blobFromImage(op_image, 1.0 / 255, netInputSize, (0, 0, 0), swapRB=True, crop=False)
-        self.net.setInput(inpBlob)
-        output = self.net.forward()
+        self.net.blobs['image'].reshape(1, 3, inHeight, inWidth)
+        transformer = caffe.io.Transformer({'data': self.net.blobs['image'].data.shape})
+        transformer.set_transpose('data', (2, 0, 1))
+        transformer.set_mean('data', np.array([0, 0, 0]))  # mean pixel
+        transformer.set_raw_scale('data', 1/255.0)  # the reference model operates on images in [0,255] range instead of [0,1]
+        transformer.set_channel_swap('data', (2, 1, 0))  # the reference model has channels in BGR order instead of RGB
+        transformed_image = transformer.preprocess('data', op_image)
+        self.net.blobs['image'].data[0, ...] = transformed_image
+        output = self.net.forward()['net_output']
         scaleX = float(op_image.shape[1]) / output.shape[3]
         scaleY = float(op_image.shape[0]) / output.shape[2]
 
@@ -423,7 +427,7 @@ def net_init():
     # load detection model
     modelDeployFile = 'models/detection/deploy.prototxt'
     modelWeightsFile = 'models/detection/coco_refinedet_resnet18_addneg_1024x1024_iter_340000.caffemodel'
-    det_net = PeopleDetection(modelDeployFile, modelWeightsFile, img_resize=512, batch_size=25, threshold=0.60)
+    det_net = PeopleDetection(modelDeployFile, modelWeightsFile, img_resize=512, batch_size=20, threshold=0.60)
 
     # load openpose model
     protoFile = "./models/body_25/pose_deploy.prototxt"
