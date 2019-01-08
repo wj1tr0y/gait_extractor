@@ -3,7 +3,7 @@
 @Date: 2019-01-05 14:44:14
 @LastEditors: Jilong Wang
 @Email: jilong.wang@watrix.ai
-@LastEditTime: 2019-01-08 17:16:16
+@LastEditTime: 2019-01-08 18:15:17
 @Description: In this script, we will load a RefineDet model to detect pedestrian and use openpose to check the integrity of each pedestrian.
 finally, we will use a small segmentation model to seg person in each frame then save the result.
 '''
@@ -16,6 +16,7 @@ import numpy as np
 import skimage.io as io
 import cv2
 import time
+import shutil
 import matplotlib.pyplot as plt
 os.environ['GLOG_minloglevel'] = '3'
 # Make sure that caffe is on the python path:x
@@ -242,22 +243,11 @@ def save_results(frame_main_role, img_dir, save_dir):
     if len(frame_main_role) == 0:
         print('no gait extracted in this video.')
         sys.exit(0)
-    # if len(frame_main_role) < 30:
-    #     first_frame = 5
-    #     last_frame = -10
-    # else:
-    #     first_frame = 5
-    #     last_frame = -25
     first_frame = 3
     last_frame = check_last_1s(frame_main_role, img_dir)
     print("the frist frame is {}, the last frame is {}".format(frame_main_role[first_frame][0][5:-4], frame_main_role[last_frame-1][0][5:-4]))
     for im_name, coord in frame_main_role[first_frame: last_frame]:
         img = cv2.imread(os.path.join(img_dir, im_name), cv2.IMREAD_COLOR)
-        # xmin, xmax, ymin, ymax = coord
-
-        # op_image = img[ymin:ymax, xmin:xmax, :, np.newaxis]
-        # segResults = seg_net.segmentPeople(op_image)
-
         cv2.imwrite(os.path.join(save_dir, im_name[:-4] + '_dets.jpg'), img)
         print('Saved: ' + os.path.join(save_dir, im_name[:-4] + '_dets.jpg'))
         sys.stdout.flush()
@@ -364,11 +354,12 @@ def find_first_main_role(frame_result):
             max_area = area
             max_index = i
             main_role_coord = [xmin, xmax, ymin, ymax]
-
-    first_index = roles[0][0]
-    # print(first_index, max_index)
-    # sys.stdout.flush()
-    # find the first frame of the largest role
+    try:
+        first_index = roles[0][0]
+    except:
+        print('there is no person in this video!')
+        shutil.rmtree(save_dir)
+        sys.exit(0)
     if first_index == max_index:
         return max_index, main_role_coord
     search_frame = frame_result[first_index: max_index]

@@ -3,7 +3,7 @@
 @Date: 2019-01-05 17:47:31
 @LastEditors: Jilong Wang
 @Email: jilong.wang@watrix.ai
-@LastEditTime: 2019-01-08 18:04:57
+@LastEditTime: 2019-01-08 18:11:03
 @Description: Gait extractor. Supporting single video file extraction{pass the video file path} and mutli-videos extraction{pass the video folder path}
 '''
 import cv2
@@ -60,11 +60,11 @@ if __name__ == '__main__':
                     frame_count += 1
                 else:
                     print ''
-            
+            cap.release()
         else:
             print('Video had already split in frames stored in {}'.format(frame_save_dir))
 
-        cap.release()
+        
         
         # gait picture save path
         out_dir = './results/result-' + os.path.basename(video_name)[:-4]
