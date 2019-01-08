@@ -3,7 +3,7 @@
 @Date: 2019-01-05 14:44:14
 @LastEditors: Jilong Wang
 @Email: jilong.wang@watrix.ai
-@LastEditTime: 2019-01-08 14:21:22
+@LastEditTime: 2019-01-08 15:52:36
 @Description: In this script, we will load a RefineDet model to detect pedestrian and use openpose to check the integrity of each pedestrian.
 finally, we will use a small segmentation model to seg person in each frame then save the result.
 '''
@@ -241,7 +241,7 @@ def save_results(frame_main_role, img_dir, save_dir):
         first_frame = 5
         last_frame = -25
 
-    print("the frist frame is {}, the last frame is {}".format(first_frame, last_frame))
+    print("the frist frame is {}, the last frame is {}".format(frame_main_role[first_frame][0][5:-4], frame_main_role[last_frame-1][0][5:-4]))
     for im_name, coord in frame_main_role[first_frame: last_frame]:
         img = cv2.imread(os.path.join(img_dir, im_name), cv2.IMREAD_COLOR)
         xmin, xmax, ymin, ymax = coord
