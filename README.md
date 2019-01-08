@@ -3,7 +3,7 @@
  * @Date: 2019-01-08 14:31:09
  * @LastEditors: Jilong Wang
  * @Email: jilong.wang@watrix.ai
- * @LastEditTime: 2019-01-08 14:56:03
+ * @LastEditTime: 2019-01-08 15:06:20
  * @Description: file content
  -->
 
@@ -11,8 +11,10 @@
 
 [![License](https://img.shields.io/badge/license-BSD-blue.svg)](LICENSE)
 
-this project uses modified refineDet model and openpose model.
-We provided a 250FPS(on Titan Xp) pedestrian detection RefineDet model(using res18 and reducing refineDet head channels).
+This project uses modified refineDet model and openpose model.
+
+
+We provided a 250FPS(on Titan Xp with batch_size=20) pedestrian detection RefineDet model(using res18 and reducing refineDet head channels).
 
 ## Installation
 
@@ -46,7 +48,7 @@ Or you can use camke-gui
   make -j8
   ```
 
-This project based on SSD caffe repo but we modified detection_out_layer and add pixel suffle layer. So if you're using your own caffe, please don't forget copy these source file into your project and re-compile them.
+This project based on SSD caffe repo but we modified detection_out_layer and add pixel_suffle_layer. So if you're using your own caffe, please don't forget copy these two layer's source files into your project and re-compile them.
 
 ## Preparation
 
@@ -65,4 +67,4 @@ This project based on SSD caffe repo but we modified detection_out_layer and add
 
 ## Save Path
 
-if you wanna change the save path, please change them in [gait_extractor.py](https://github.com/wj1tr0y/gait_extractor/blob/master/gait_extractor.py)
+If you wanna change the save path, please change them in [gait_extractor.py](https://github.com/wj1tr0y/gait_extractor/blob/master/gait_extractor.py)
