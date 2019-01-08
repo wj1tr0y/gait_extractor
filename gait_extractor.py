@@ -3,7 +3,7 @@
 @Date: 2019-01-05 17:47:31
 @LastEditors: Jilong Wang
 @Email: jilong.wang@watrix.ai
-@LastEditTime: 2019-01-08 17:19:50
+@LastEditTime: 2019-01-08 18:01:32
 @Description: Gait extractor. Supporting single video file extraction{pass the video file path} and mutli-videos extraction{pass the video folder path}
 '''
 import cv2
@@ -37,6 +37,8 @@ if __name__ == '__main__':
     
     if SET_TEST:
         video_names = os.listdir(video_name)
+    
+    print(video_names)
     
     cost = 0
     for video_name in video_names:
