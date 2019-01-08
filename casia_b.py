@@ -3,7 +3,7 @@
 @Date: 2019-01-05 14:44:14
 @LastEditors: Jilong Wang
 @Email: jilong.wang@watrix.ai
-@LastEditTime: 2019-01-08 16:20:13
+@LastEditTime: 2019-01-08 17:16:16
 @Description: In this script, we will load a RefineDet model to detect pedestrian and use openpose to check the integrity of each pedestrian.
 finally, we will use a small segmentation model to seg person in each frame then save the result.
 '''
@@ -16,7 +16,7 @@ import numpy as np
 import skimage.io as io
 import cv2
 import time
-
+import matplotlib.pyplot as plt
 os.environ['GLOG_minloglevel'] = '3'
 # Make sure that caffe is on the python path:x
 caffe_root = './'
@@ -105,6 +105,8 @@ class OpenPose:
         @param {nparray image} 
         @return: number of keypoints
         '''
+        # plt.imshow(op_image)
+        # plt.show()
         # detection image preprocessing
         if self.width == -1:
             ratio = self.height / op_image.shape[0]
@@ -185,8 +187,8 @@ class OpenPose:
                 count += 1
             else:
                 count -= 1
-        # print(count)
-        # sys.stdout.flush()
+        print(count)
+        sys.stdout.flush()
         return count
 
 class PeopleSegmentation:
@@ -236,27 +238,41 @@ class PeopleSegmentation:
         return np.squeeze(out)
 
 def save_results(frame_main_role, img_dir, save_dir):
-    # last_frame = check_last_1s(frame_main_role, img_dir)
     # if having enough frames, then abort the first 5 frame and last 25 frames in order to have intact person
-    if len(frame_main_role) < 30:
-        first_frame = 5
-        last_frame = -10
-    else:
-        first_frame = 5
-        last_frame = -25
-
+    if len(frame_main_role) == 0:
+        print('no gait extracted in this video.')
+        sys.exit(0)
+    # if len(frame_main_role) < 30:
+    #     first_frame = 5
+    #     last_frame = -10
+    # else:
+    #     first_frame = 5
+    #     last_frame = -25
+    first_frame = 3
+    last_frame = check_last_1s(frame_main_role, img_dir)
     print("the frist frame is {}, the last frame is {}".format(frame_main_role[first_frame][0][5:-4], frame_main_role[last_frame-1][0][5:-4]))
     for im_name, coord in frame_main_role[first_frame: last_frame]:
         img = cv2.imread(os.path.join(img_dir, im_name), cv2.IMREAD_COLOR)
-        xmin, xmax, ymin, ymax = coord
+        # xmin, xmax, ymin, ymax = coord
 
-        op_image = img[ymin:ymax, xmin:xmax, :, np.newaxis]
-        segResults = seg_net.segmentPeople(op_image)
+        # op_image = img[ymin:ymax, xmin:xmax, :, np.newaxis]
+        # segResults = seg_net.segmentPeople(op_image)
 
-        cv2.imwrite(os.path.join(save_dir, im_name[:-4] + '_dets.jpg'), segResults)
+        cv2.imwrite(os.path.join(save_dir, im_name[:-4] + '_dets.jpg'), img)
         print('Saved: ' + os.path.join(save_dir, im_name[:-4] + '_dets.jpg'))
         sys.stdout.flush()
-            
+
+def check_last_1s(frame_main_role, img_dir):
+    for i, pack in enumerate(frame_main_role[-25:]):
+        im_name, coord = pack
+        img = cv2.imread(os.path.join(img_dir, im_name), cv2.IMREAD_COLOR)
+        xmin, xmax, ymin, ymax = coord
+        op_image = img[ymin:ymax, xmin:xmax, :]
+        if op_net.get_keypoints(op_image, model='strict') !=7 :
+            return len(frame_main_role) - 25 + i
+    return len(frame_main_role)
+
+    
 def find_max(results, threshold, shape):
     max_area = 0
     Xmin, Xmax, Ymin, Ymax = 0, 0, 0, 0
@@ -311,7 +327,7 @@ def is_main_role(coord1, coord2):
     x2_center = (coord2[0] + coord2[1])
     y2_center = (coord2[2] + coord2[3])
     distance = (x1_center - x2_center) ** 2 + (y1_center - y2_center) ** 2
-    if distance < 10000 and x1_center != 0 and y1_center != 0:
+    if distance < (SHAPE[0]*0.1)**2 and x1_center != 0 and y1_center != 0:
         return True
     else:
         return False
@@ -397,7 +413,7 @@ def is_moving(coord, still_coord):
     x2_center = (still_coord[0] + still_coord[1])
     y2_center = (still_coord[2] + still_coord[3])
     distance = (x1_center - x2_center) ** 2 + (y1_center - y2_center) ** 2
-    if distance > 900:
+    if distance > (SHAPE[0]*0.008)**2:
         return True
     else:
         return False
@@ -427,7 +443,7 @@ def net_init():
     # load detection model
     modelDeployFile = 'models/detection/deploy.prototxt'
     modelWeightsFile = 'models/detection/coco_refinedet_resnet18_addneg_1024x1024_iter_340000.caffemodel'
-    det_net = PeopleDetection(modelDeployFile, modelWeightsFile, img_resize=512, batch_size=20, threshold=0.60)
+    det_net = PeopleDetection(modelDeployFile, modelWeightsFile, img_resize=384, batch_size=20, threshold=0.60)
 
     # load openpose model
     protoFile = "./models/body_25/pose_deploy.prototxt"
@@ -461,6 +477,8 @@ if __name__ == '__main__':
         os.mkdir(save_dir)
 
     test_set = args.test_set
+    img = cv2.imread(test_set+'/'+os.listdir(test_set)[0])
+    SHAPE = img.shape
     img_dir = test_set
     if not os.path.exists(test_set):
         print("{} doesn't exists".format(test_set))
