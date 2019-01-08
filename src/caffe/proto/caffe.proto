@@ -542,6 +542,7 @@ message LayerParameter {
   optional TileParameter tile_param = 138;
   optional VideoDataParameter video_data_param = 207;
   optional WindowDataParameter window_data_param = 129;
+  optional PixelShuffleParameter pixel_shuffle_param = 888;
 }
 
 // Message that stores parameters used to apply transformation
@@ -1607,6 +1608,10 @@ message ScaleParameter {
   // may be more efficient).  Initialized with bias_filler (defaults to 0).
   optional bool bias_term = 4 [default = false];
   optional FillerParameter bias_filler = 5;
+}
+
+message PixelShuffleParameter {
+  optional int32 upscale_factor = 1 [default = 2];
 }
 
 message SigmoidParameter {

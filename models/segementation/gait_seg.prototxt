@@ -1,0 +1,517 @@
+name: "pytorch"
+input: "data"
+input_dim: 1
+input_dim: 3
+input_dim: 150
+input_dim: 100
+layer {
+  name: "ConvNdBackward1"
+  type: "Convolution"
+  bottom: "data"
+  top: "ConvNdBackward1"
+  convolution_param {
+    num_output: 64
+    bias_term: true
+    group: 1
+    bias_filler {
+      type: "constant"
+      value: 0.0
+    }
+    pad_h: 1
+    pad_w: 1
+    kernel_h: 3
+    kernel_w: 3
+    stride_h: 1
+    stride_w: 1
+  }
+}
+layer {
+  name: "ThresholdBackward3"
+  type: "ReLU"
+  bottom: "ConvNdBackward1"
+  top: "BatchNormBackward2"
+}
+layer {
+  name: "ConvNdBackward4"
+  type: "Convolution"
+  bottom: "BatchNormBackward2"
+  top: "ConvNdBackward4"
+  convolution_param {
+    num_output: 64
+    bias_term: true
+    group: 1
+    bias_filler {
+      type: "constant"
+      value: 0.0
+    }
+    pad_h: 1
+    pad_w: 1
+    kernel_h: 3
+    kernel_w: 3
+    stride_h: 2
+    stride_w: 2
+  }
+}
+layer {
+  name: "ThresholdBackward6"
+  type: "ReLU"
+  bottom: "ConvNdBackward4"
+  top: "BatchNormBackward5"
+}
+layer {
+  name: "ConvNdBackward8"
+  type: "Convolution"
+  bottom: "BatchNormBackward5"
+  top: "ConvNdBackward8"
+  convolution_param {
+    num_output: 64
+    bias_term: true
+    group: 1
+    bias_filler {
+      type: "constant"
+      value: 0.0
+    }
+    pad_h: 1
+    pad_w: 1
+    kernel_h: 3
+    kernel_w: 3
+    stride_h: 2
+    stride_w: 2
+  }
+}
+layer {
+  name: "ThresholdBackward10"
+  type: "ReLU"
+  bottom: "ConvNdBackward8"
+  top: "BatchNormBackward9"
+}
+layer {
+  name: "ConvNdBackward12"
+  type: "Convolution"
+  bottom: "BatchNormBackward9"
+  top: "ConvNdBackward12"
+  convolution_param {
+    num_output: 64
+    bias_term: true
+    group: 1
+    bias_filler {
+      type: "constant"
+      value: 0.0
+    }
+    pad_h: 1
+    pad_w: 1
+    kernel_h: 3
+    kernel_w: 3
+    stride_h: 2
+    stride_w: 2
+  }
+}
+layer {
+  name: "ThresholdBackward14"
+  type: "ReLU"
+  bottom: "ConvNdBackward12"
+  top: "BatchNormBackward13"
+}
+layer {
+  name: "ConvNdBackward16"
+  type: "Convolution"
+  bottom: "BatchNormBackward13"
+  top: "ConvNdBackward16"
+  convolution_param {
+    num_output: 64
+    bias_term: true
+    group: 1
+    bias_filler {
+      type: "constant"
+      value: 0.0
+    }
+    pad_h: 1
+    pad_w: 1
+    kernel_h: 3
+    kernel_w: 3
+    stride_h: 2
+    stride_w: 2
+  }
+}
+layer {
+  name: "ThresholdBackward18"
+  type: "ReLU"
+  bottom: "ConvNdBackward16"
+  top: "BatchNormBackward17"
+}
+layer {
+  name: "ConvNdBackward20"
+  type: "Convolution"
+  bottom: "BatchNormBackward17"
+  top: "ConvNdBackward20"
+  convolution_param {
+    num_output: 64
+    bias_term: true
+    group: 1
+    bias_filler {
+      type: "constant"
+      value: 0.0
+    }
+    pad_h: 1
+    pad_w: 1
+    kernel_h: 3
+    kernel_w: 3
+    stride_h: 2
+    stride_w: 2
+  }
+}
+layer {
+  name: "ThresholdBackward22"
+  type: "ReLU"
+  bottom: "ConvNdBackward20"
+  top: "BatchNormBackward21"
+}
+layer {
+  name: "ConvNdBackward24"
+  type: "Convolution"
+  bottom: "BatchNormBackward21"
+  top: "ConvNdBackward24"
+  convolution_param {
+    num_output: 64
+    bias_term: true
+    group: 1
+    bias_filler {
+      type: "constant"
+      value: 0.0
+    }
+    pad_h: 0
+    pad_w: 0
+    kernel_h: 3
+    kernel_w: 3
+    stride_h: 1
+    stride_w: 1
+  }
+}
+layer {
+  name: "ThresholdBackward26"
+  type: "ReLU"
+  bottom: "ConvNdBackward24"
+  top: "BatchNormBackward25"
+}
+layer {
+  name: "PermuteBackward27"
+  type: "PixelShuffle"
+  bottom: "BatchNormBackward25"
+  top: "PermuteBackward27"
+  pixel_shuffle_param {
+    upscale_factor: 2
+  }
+}
+layer {
+  name: "ConvNdBackward28"
+  type: "Convolution"
+  bottom: "PermuteBackward27"
+  top: "ConvNdBackward28"
+  convolution_param {
+    num_output: 64
+    bias_term: true
+    group: 1
+    bias_filler {
+      type: "constant"
+      value: 0.0
+    }
+    pad_h: 1
+    pad_w: 1
+    kernel_h: 4
+    kernel_w: 3
+    stride_h: 1
+    stride_w: 1
+  }
+}
+layer {
+  name: "ThresholdBackward30"
+  type: "ReLU"
+  bottom: "ConvNdBackward28"
+  top: "BatchNormBackward29"
+}
+layer {
+  name: "ConcatBackward31"
+  type: "Concat"
+  bottom: "BatchNormBackward21"
+  bottom: "BatchNormBackward29"
+  top: "ConcatBackward31"
+  concat_param {
+    axis: 1
+  }
+}
+layer {
+  name: "PermuteBackward32"
+  type: "PixelShuffle"
+  bottom: "ConcatBackward31"
+  top: "PermuteBackward32"
+  pixel_shuffle_param {
+    upscale_factor: 2
+  }
+}
+layer {
+  name: "ConvNdBackward33"
+  type: "Convolution"
+  bottom: "PermuteBackward32"
+  top: "ConvNdBackward33"
+  convolution_param {
+    num_output: 64
+    bias_term: true
+    group: 1
+    bias_filler {
+      type: "constant"
+      value: 0.0
+    }
+    pad_h: 1
+    pad_w: 1
+    kernel_h: 3
+    kernel_w: 4
+    stride_h: 1
+    stride_w: 1
+  }
+}
+layer {
+  name: "ThresholdBackward35"
+  type: "ReLU"
+  bottom: "ConvNdBackward33"
+  top: "BatchNormBackward34"
+}
+layer {
+  name: "ConcatBackward36"
+  type: "Concat"
+  bottom: "BatchNormBackward17"
+  bottom: "BatchNormBackward34"
+  top: "ConcatBackward36"
+  concat_param {
+    axis: 1
+  }
+}
+layer {
+  name: "PermuteBackward37"
+  type: "PixelShuffle"
+  bottom: "ConcatBackward36"
+  top: "PermuteBackward37"
+  pixel_shuffle_param {
+    upscale_factor: 2
+  }
+}
+layer {
+  name: "ConvNdBackward38"
+  type: "Convolution"
+  bottom: "PermuteBackward37"
+  top: "ConvNdBackward38"
+  convolution_param {
+    num_output: 64
+    bias_term: true
+    group: 1
+    bias_filler {
+      type: "constant"
+      value: 0.0
+    }
+    pad_h: 1
+    pad_w: 1
+    kernel_h: 4
+    kernel_w: 4
+    stride_h: 1
+    stride_w: 1
+  }
+}
+layer {
+  name: "ThresholdBackward40"
+  type: "ReLU"
+  bottom: "ConvNdBackward38"
+  top: "BatchNormBackward39"
+}
+layer {
+  name: "ConcatBackward41"
+  type: "Concat"
+  bottom: "BatchNormBackward13"
+  bottom: "BatchNormBackward39"
+  top: "ConcatBackward41"
+  concat_param {
+    axis: 1
+  }
+}
+layer {
+  name: "PermuteBackward42"
+  type: "PixelShuffle"
+  bottom: "ConcatBackward41"
+  top: "PermuteBackward42"
+  pixel_shuffle_param {
+    upscale_factor: 2
+  }
+}
+layer {
+  name: "ConvNdBackward43"
+  type: "Convolution"
+  bottom: "PermuteBackward42"
+  top: "ConvNdBackward43"
+  convolution_param {
+    num_output: 64
+    bias_term: true
+    group: 1
+    bias_filler {
+      type: "constant"
+      value: 0.0
+    }
+    pad_h: 1
+    pad_w: 1
+    kernel_h: 3
+    kernel_w: 4
+    stride_h: 1
+    stride_w: 1
+  }
+}
+layer {
+  name: "ThresholdBackward45"
+  type: "ReLU"
+  bottom: "ConvNdBackward43"
+  top: "BatchNormBackward44"
+}
+layer {
+  name: "ConcatBackward46"
+  type: "Concat"
+  bottom: "BatchNormBackward9"
+  bottom: "BatchNormBackward44"
+  top: "ConcatBackward46"
+  concat_param {
+    axis: 1
+  }
+}
+layer {
+  name: "PermuteBackward47"
+  type: "PixelShuffle"
+  bottom: "ConcatBackward46"
+  top: "PermuteBackward47"
+  pixel_shuffle_param {
+    upscale_factor: 2
+  }
+}
+layer {
+  name: "ConvNdBackward48"
+  type: "Convolution"
+  bottom: "PermuteBackward47"
+  top: "ConvNdBackward48"
+  convolution_param {
+    num_output: 64
+    bias_term: true
+    group: 1
+    bias_filler {
+      type: "constant"
+      value: 0.0
+    }
+    pad_h: 1
+    pad_w: 1
+    kernel_h: 4
+    kernel_w: 3
+    stride_h: 1
+    stride_w: 1
+  }
+}
+layer {
+  name: "ThresholdBackward50"
+  type: "ReLU"
+  bottom: "ConvNdBackward48"
+  top: "BatchNormBackward49"
+}
+layer {
+  name: "ConcatBackward51"
+  type: "Concat"
+  bottom: "BatchNormBackward5"
+  bottom: "BatchNormBackward49"
+  top: "ConcatBackward51"
+  concat_param {
+    axis: 1
+  }
+}
+layer {
+  name: "PermuteBackward52"
+  type: "PixelShuffle"
+  bottom: "ConcatBackward51"
+  top: "PermuteBackward52"
+  pixel_shuffle_param {
+    upscale_factor: 2
+  }
+}
+layer {
+  name: "ConvNdBackward53"
+  type: "Convolution"
+  bottom: "PermuteBackward52"
+  top: "ConvNdBackward53"
+  convolution_param {
+    num_output: 64
+    bias_term: true
+    group: 1
+    bias_filler {
+      type: "constant"
+      value: 0.0
+    }
+    pad_h: 1
+    pad_w: 1
+    kernel_h: 3
+    kernel_w: 3
+    stride_h: 1
+    stride_w: 1
+  }
+}
+layer {
+  name: "ThresholdBackward55"
+  type: "ReLU"
+  bottom: "ConvNdBackward53"
+  top: "BatchNormBackward54"
+}
+layer {
+  name: "ConvNdBackward56"
+  type: "Convolution"
+  bottom: "BatchNormBackward54"
+  top: "ConvNdBackward56"
+  convolution_param {
+    num_output: 64
+    bias_term: true
+    group: 1
+    bias_filler {
+      type: "constant"
+      value: 0.0
+    }
+    pad_h: 0
+    pad_w: 0
+    kernel_h: 1
+    kernel_w: 1
+    stride_h: 1
+    stride_w: 1
+    engine: CAFFE
+  }
+}
+layer {
+  name: "ThresholdBackward58"
+  type: "ReLU"
+  bottom: "ConvNdBackward56"
+  top: "BatchNormBackward57"
+}
+layer {
+  name: "ConvNdBackward59"
+  type: "Convolution"
+  bottom: "BatchNormBackward57"
+  top: "ConvNdBackward59"
+  convolution_param {
+    num_output: 1
+    bias_term: true
+    group: 1
+    bias_filler {
+      type: "constant"
+      value: 0.0
+    }
+    pad_h: 0
+    pad_w: 0
+    kernel_h: 1
+    kernel_w: 1
+    stride_h: 1
+    stride_w: 1
+    engine: CAFFE
+  }
+}
+layer {
+  name: "SigmoidBackward61"
+  type: "Sigmoid"
+  bottom: "ConvNdBackward59"
+  top: "BatchNormBackward60"
+}
