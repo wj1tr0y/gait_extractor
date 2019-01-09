@@ -3,7 +3,7 @@
 @Date: 2019-01-05 14:44:14
 @LastEditors: Jilong Wang
 @Email: jilong.wang@watrix.ai
-@LastEditTime: 2019-01-09 17:54:13
+@LastEditTime: 2019-01-09 17:58:50
 @Description: In this script, we will load a RefineDet model to detect pedestrian and use openpose to check the integrity of each pedestrian.
 finally, we will use a small segmentation model to seg person in each frame then save the result.
 '''
@@ -168,6 +168,7 @@ def find_first_role(frame_result):
         _, keypoints = pack
         if keypoints == 7:
             return i + 5
+    return -1
 def net_init(det_batch_size):
     '''
     @description: load detection & openpose & segementation models

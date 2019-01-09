@@ -3,7 +3,7 @@
 @Date: 2019-01-05 17:47:31
 @LastEditors: Jilong Wang
 @Email: jilong.wang@watrix.ai
-@LastEditTime: 2019-01-09 16:39:52
+@LastEditTime: 2019-01-09 17:59:40
 @Description: Gait extractor. Supporting single video file extraction{pass the video file path} and mutli-videos extraction{pass the video folder path}
 '''
 import cv2
@@ -62,6 +62,8 @@ if __name__ == '__main__':
     
     if args.dataset == 'casia_b':
         import casia_b as casia
+        if SET_TEST:
+            video_names = [x for x in video_names if 'bkgrd' not in x]
     elif args.dataset == 'casia_e':
         import casia_e as casia
 
