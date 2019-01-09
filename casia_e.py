@@ -3,7 +3,7 @@
 @Date: 2019-01-05 14:44:14
 @LastEditors: Jilong Wang
 @Email: jilong.wang@watrix.ai
-@LastEditTime: 2019-01-09 11:13:41
+@LastEditTime: 2019-01-09 16:21:52
 @Description: In this script, we will load a RefineDet model to detect pedestrian and use openpose to check the integrity of each pedestrian.
 finally, we will use a small segmentation model to seg person in each frame then save the result.
 '''
@@ -99,11 +99,10 @@ class PeopleDetection:
                 names = []
                 shapes = []
                 # change batch_size when there is no enough images to fill initial batch_size
-                if len(im_names) - count < batch_size:
+                if len(im_names) - count <= batch_size:
                     batch_size = len(im_names) - count - 1
             # sys.stdout.flush()
-        print('Detection done!')
-        sys.stdout.flush
+        print('Detection done! Total:{} frames'.format(len(frame_result)))
         return frame_result
 
 class OpenPose:
@@ -113,15 +112,14 @@ class OpenPose:
         self.threshold = threshold
         self.net = caffe.Net(modelDeployFile, modelWeightsFile, caffe.TEST)
 
-    def get_keypoints(self, op_image,  model='not strict'):
+    def get_keypoints(self, op_image,  mode='not strict'):
         '''
         @description: get an image then return how many keypoints were detected
         @param {nparray image} 
         @return: number of keypoints
         '''
-        # plt.imshow(op_image)
-        # plt.show()
         # detection image preprocessing
+        op_image = cv2.cvtColor(op_image, cv2.COLOR_BGR2RGB)
         if self.width == -1:
             ratio = self.height / op_image.shape[0]
             inWidth = int(round(op_image.shape[1] * ratio))
@@ -201,8 +199,6 @@ class OpenPose:
                 count += 1
             else:
                 count -= 1
-        # print(count)
-        # sys.stdout.flush()
         return count
 
 class PeopleSegmentation:
@@ -283,7 +279,7 @@ def check_last_1s(frame_main_role, op_net, img_dir):
         img = cv2.imread(os.path.join(img_dir, im_name), cv2.IMREAD_COLOR)
         xmin, xmax, ymin, ymax = coord
         op_image = img[ymin:ymax, xmin:xmax, :]
-        if op_net.get_keypoints(op_image, model='strict') !=7 :
+        if op_net.get_keypoints(op_image, mode='not strict') !=7 :
             return len(frame_main_role) - 25 + i
     return len(frame_main_role)
 
@@ -364,7 +360,7 @@ def find_first_main_role(frame_result, op_net, img_dir):
         # print("checking frame {}".format(i))
         # print(xmin, xmax, ymin, ymax)
         # sys.stdout.flush()
-        if xmin + xmax + ymin + ymax != 0 and op_net.get_keypoints(op_image, model='strict') == 7:
+        if xmin + xmax + ymin + ymax != 0 and op_net.get_keypoints(op_image, mode='strict') == 7:
             roles.append((i, [xmin, xmax, ymin, ymax]))
 
     # find the largest role which definitely is the main role

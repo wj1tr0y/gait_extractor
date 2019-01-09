@@ -3,7 +3,7 @@
 @Date: 2019-01-05 14:44:14
 @LastEditors: Jilong Wang
 @Email: jilong.wang@watrix.ai
-@LastEditTime: 2019-01-09 11:13:55
+@LastEditTime: 2019-01-09 16:30:43
 @Description: In this script, we will load a RefineDet model to detect pedestrian and use openpose to check the integrity of each pedestrian.
 finally, we will use a small segmentation model to seg person in each frame then save the result.
 '''
@@ -86,11 +86,10 @@ class PeopleDetection:
                 names = []
                 shapes = []
                 # change batch_size when there is no enough images to fill initial batch_size
-                if len(im_names) - count < batch_size:
+                if len(im_names) - count <= batch_size:
                     batch_size = len(im_names) - count - 1
             # sys.stdout.flush()
-        print('Detection done!')
-        sys.stdout.flush
+        print('Detection done! Total:{} frames'.format(len(frame_result)))
         return frame_result
 
 class OpenPose:
@@ -100,15 +99,15 @@ class OpenPose:
         self.threshold = threshold
         self.net = caffe.Net(modelDeployFile, modelWeightsFile, caffe.TEST)
 
-    def get_keypoints(self, op_image,  model='not strict'):
+    def get_keypoints(self, im_name, mode='not strict'):
         '''
         @description: get an image then return how many keypoints were detected
         @param {nparray image} 
         @return: number of keypoints
         '''
-        # plt.imshow(op_image)
-        # plt.show()
         # detection image preprocessing
+        op_image = cv2.imread(im_name)
+        op_image = cv2.cvtColor(op_image, cv2.COLOR_BGR2RGB)
         if self.width == -1:
             ratio = 1
             inWidth = int(round(op_image.shape[1] * ratio))
@@ -126,6 +125,7 @@ class OpenPose:
         transformed_image = transformer.preprocess('data', op_image)
         self.net.blobs['image'].data[0, ...] = transformed_image
         output = self.net.forward()['net_output']
+
         scaleX = float(op_image.shape[1]) / output.shape[3]
         scaleY = float(op_image.shape[0]) / output.shape[2]
 
@@ -150,7 +150,7 @@ class OpenPose:
             else :
                 points.append(None)
         count = 0
-        if model == 'strict':
+        if mode == 'strict':
             if points[1] is not None: # Neck
                 count += 1
             if points[10] and points[13]: # Knee
@@ -190,6 +190,10 @@ class OpenPose:
                 count -= 1
         # print(count)
         # sys.stdout.flush()
+        # if count < 5:
+        #     plt.imshow(op_image)
+        #     plt.show()
+        #     cv2.imwrite(os.path.join('.', 'dets.jpg'), op_image)
         return count
 
 class PeopleSegmentation:
@@ -252,7 +256,6 @@ class GaitExtractor:
         frame_main_role = frame_main_role[start_moving_frame:end_moving_frame]
         save_results(frame_main_role, self.op_net, self.seg_net, test_set, save_dir)
 
-
 def save_results(frame_main_role, op_net, seg_net, img_dir, save_dir):
     # if having enough frames, then abort the first 5 frame and last 25 frames in order to have intact person
     if len(frame_main_role) == 0:
@@ -260,6 +263,7 @@ def save_results(frame_main_role, op_net, seg_net, img_dir, save_dir):
         sys.exit(0)
     first_frame = 3
     last_frame = check_last_1s(frame_main_role, op_net, img_dir)
+    last_frame -= 10
     print("the frist frame is {}, the last frame is {}".format(frame_main_role[first_frame][0][5:-4], frame_main_role[last_frame-1][0][5:-4]))
     for im_name, coord in frame_main_role[first_frame: last_frame]:
         img = cv2.imread(os.path.join(img_dir, im_name), cv2.IMREAD_COLOR)
@@ -270,11 +274,7 @@ def save_results(frame_main_role, op_net, seg_net, img_dir, save_dir):
 def check_last_1s(frame_main_role, op_net, img_dir):
     for i, pack in enumerate(frame_main_role[-25:]):
         im_name, coord = pack
-        img = cv2.imread(os.path.join(img_dir, im_name), cv2.IMREAD_COLOR)
-        xmin, xmax, ymin, ymax = coord
-        op_image = img[ymin:ymax, xmin:xmax]
-
-        if op_net.get_keypoints(op_image) != 7:
+        if op_net.get_keypoints(os.path.join(img_dir, im_name)) != 7:
             return len(frame_main_role) - 25 + i
     return len(frame_main_role)
     
@@ -351,12 +351,10 @@ def find_first_main_role(frame_result, op_net, img_dir):
     for i in range(0, len(frame_result), 5):
         im_name, result, shape = frame_result[i]
         xmin, xmax, ymin, ymax = find_max(result, 0.50, shape)
-        img = cv2.imread(os.path.join(img_dir, im_name))
-        op_image = img[ymin:ymax, xmin:xmax]
         # print("checking frame {}".format(i))
         # print(xmin, xmax, ymin, ymax)
         # sys.stdout.flush()
-        if xmin + xmax + ymin + ymax != 0 and op_net.get_keypoints(op_image, model='strict') == 7:
+        if xmin + xmax + ymin + ymax != 0 and op_net.get_keypoints(os.path.join(img_dir, im_name), mode='strict') == 7:
             roles.append((i, [xmin, xmax, ymin, ymax]))
 
     # find the largest role which definitely is the main role
