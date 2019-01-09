@@ -3,7 +3,7 @@
 @Date: 2019-01-05 17:47:31
 @LastEditors: Jilong Wang
 @Email: jilong.wang@watrix.ai
-@LastEditTime: 2019-01-09 11:05:14
+@LastEditTime: 2019-01-09 11:25:36
 @Description: Gait extractor. Supporting single video file extraction{pass the video file path} and mutli-videos extraction{pass the video folder path}
 '''
 import cv2
@@ -86,9 +86,10 @@ if __name__ == '__main__':
         os.mkdir(save_dir)
 
         start_time = time.time()
-        print 'Detecting pedestrian.....'
+        print 'Extracting gait.....'
         
         # do extraction
         gait_extractor.extract(img_dir, save_dir)
+        
         cost += time.time()-start_time
     print(cost)
