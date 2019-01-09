@@ -3,7 +3,7 @@
 @Date: 2019-01-05 14:44:14
 @LastEditors: Jilong Wang
 @Email: jilong.wang@watrix.ai
-@LastEditTime: 2019-01-09 11:06:59
+@LastEditTime: 2019-01-09 11:13:41
 @Description: In this script, we will load a RefineDet model to detect pedestrian and use openpose to check the integrity of each pedestrian.
 finally, we will use a small segmentation model to seg person in each frame then save the result.
 '''
@@ -201,8 +201,8 @@ class OpenPose:
                 count += 1
             else:
                 count -= 1
-        print(count)
-        sys.stdout.flush()
+        # print(count)
+        # sys.stdout.flush()
         return count
 
 class PeopleSegmentation:
