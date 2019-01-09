@@ -3,7 +3,7 @@
 @Date: 2019-01-08 16:43:42
 @LastEditors: Jilong Wang
 @Email: jilong.wang@watrix.ai
-@LastEditTime: 2019-01-09 14:38:46
+@LastEditTime: 2019-01-09 15:49:58
 @Description: file content
 '''
 import os
@@ -25,11 +25,3 @@ for i in range(len(names)):
     for v_name in names[i]:
         shutil.copy(os.path.join(DATA_ROOT, 'videos', v_name), os.path.join(DATA_ROOT, 'slice'+str(i), v_name))
 
-# folder_names = os.listdir('results')
-# for folder in folder_names:
-#         names = os.listdir(os.path.join('results', folder))
-#         names.sort(key=lambda x:int(x[5:-9]))
-#         names = [os.path.join('results', folder, x) for x in names]
-#         if len(names) > 10:
-#                 for i in names[-3:]:
-#                         os.remove(i)
