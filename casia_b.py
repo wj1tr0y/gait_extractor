@@ -3,7 +3,7 @@
 @Date: 2019-01-05 14:44:14
 @LastEditors: Jilong Wang
 @Email: jilong.wang@watrix.ai
-@LastEditTime: 2019-01-09 16:50:21
+@LastEditTime: 2019-01-09 17:05:28
 @Description: In this script, we will load a RefineDet model to detect pedestrian and use openpose to check the integrity of each pedestrian.
 finally, we will use a small segmentation model to seg person in each frame then save the result.
 '''
@@ -256,8 +256,6 @@ class GaitExtractor:
         except:
             shutil.rmtree(save_dir)
             return 
-        start_moving_frame, end_moving_frame = delete_still_frame(frame_main_role)
-        frame_main_role = frame_main_role[start_moving_frame:end_moving_frame]
         save_results(frame_main_role, self.op_net, self.seg_net, test_set, save_dir)
 
 def save_results(frame_main_role, op_net, seg_net, img_dir, save_dir):
@@ -265,9 +263,11 @@ def save_results(frame_main_role, op_net, seg_net, img_dir, save_dir):
     if len(frame_main_role) == 0:
         print('no gait extracted in this video.')
         sys.exit(0)
-    first_frame = 3
+    
     last_frame = check_last_1s(frame_main_role, op_net, img_dir)
-    last_frame -= 10
+    if last_frame > 20:
+        first_frame = 3
+        last_frame -= 10
     print("the frist frame is {}, the last frame is {}".format(frame_main_role[first_frame][0][5:-4], frame_main_role[last_frame-1][0][5:-4]))
     for im_name, coord in frame_main_role[first_frame: last_frame]:
         img = cv2.imread(os.path.join(img_dir, im_name), cv2.IMREAD_COLOR)
@@ -354,7 +354,7 @@ def find_first_main_role(frame_result, op_net, img_dir):
     # find main role in each frame
     for i in range(0, len(frame_result), 5):
         im_name, result, shape = frame_result[i]
-        xmin, xmax, ymin, ymax = find_max(result, 0.50, shape)
+        xmin, xmax, ymin, ymax = find_max(result, 0.40, shape)
         # print("checking frame {}".format(i))
         # print(xmin, xmax, ymin, ymax)
         # sys.stdout.flush()
@@ -387,7 +387,7 @@ def find_first_main_role(frame_result, op_net, img_dir):
     search_frame.reverse()
     for i in range(len(search_frame)):
         im_name, result, shape = search_frame[i]
-        xmin, xmax, ymin, ymax = find_max(result, 0.50, shape)
+        xmin, xmax, ymin, ymax = find_max(result, 0.40, shape)
         if is_main_role([xmin, xmax, ymin, ymax], main_role_coord):
             first_frame = max_index - i
             main_role_coord = [xmin, xmax, ymin, ymax]
@@ -408,7 +408,7 @@ def find_main_role_in_each_frame(frame_result, op_net, img_dir):
     # print('first frame is {}'.format(first_frame))
     # sys.stdout.flush()
     for im_name, result, shape in frame_result[first_frame:]:
-        xmin, xmax, ymin, ymax = find_max(result, 0.50, shape)
+        xmin, xmax, ymin, ymax = find_max(result, 0.40, shape)
 
         if is_main_role([xmin, xmax, ymin, ymax], main_role_coord):
             main_role_coord = [xmin, xmax, ymin, ymax]
@@ -419,18 +419,6 @@ def find_main_role_in_each_frame(frame_result, op_net, img_dir):
             break
 
     return frame_main_role
-    
-def is_moving(coord, still_coord):
-    x1_center = (coord[0] + coord[1])
-    y1_center = (coord[2] + coord[3])
-
-    x2_center = (still_coord[0] + still_coord[1])
-    y2_center = (still_coord[2] + still_coord[3])
-    distance = (x1_center - x2_center) ** 2 + (y1_center - y2_center) ** 2
-    if distance > 4:
-        return True
-    else:
-        return False
         
 def delete_still_frame(frame_main_role):
     # for casia_b, `do not delete still frame
