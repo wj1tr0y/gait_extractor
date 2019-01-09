@@ -3,7 +3,7 @@
 @Date: 2019-01-05 14:44:14
 @LastEditors: Jilong Wang
 @Email: jilong.wang@watrix.ai
-@LastEditTime: 2019-01-09 17:05:28
+@LastEditTime: 2019-01-09 17:12:18
 @Description: In this script, we will load a RefineDet model to detect pedestrian and use openpose to check the integrity of each pedestrian.
 finally, we will use a small segmentation model to seg person in each frame then save the result.
 '''
@@ -263,7 +263,7 @@ def save_results(frame_main_role, op_net, seg_net, img_dir, save_dir):
     if len(frame_main_role) == 0:
         print('no gait extracted in this video.')
         sys.exit(0)
-    
+    first_frame = 0
     last_frame = check_last_1s(frame_main_role, op_net, img_dir)
     if last_frame > 20:
         first_frame = 3
