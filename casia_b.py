@@ -3,7 +3,7 @@
 @Date: 2019-01-05 14:44:14
 @LastEditors: Jilong Wang
 @Email: jilong.wang@watrix.ai
-@LastEditTime: 2019-01-09 16:46:11
+@LastEditTime: 2019-01-09 16:50:21
 @Description: In this script, we will load a RefineDet model to detect pedestrian and use openpose to check the integrity of each pedestrian.
 finally, we will use a small segmentation model to seg person in each frame then save the result.
 '''
@@ -249,11 +249,13 @@ class GaitExtractor:
 
         self.det_net, self.op_net, self.seg_net = net_init(det_batch_size=det_batch_size)
 
-    def extract(self, test_set, out_dir):
-        global save_dir
-        save_dir = out_dir
+    def extract(self, test_set, save_dir):
         frame_result = self.det_net.detect(test_set)
-        frame_main_role = find_main_role_in_each_frame(frame_result, self.op_net, test_set)
+        try:
+            frame_main_role = find_main_role_in_each_frame(frame_result, self.op_net, test_set)
+        except:
+            shutil.rmtree(save_dir)
+            return 
         start_moving_frame, end_moving_frame = delete_still_frame(frame_main_role)
         frame_main_role = frame_main_role[start_moving_frame:end_moving_frame]
         save_results(frame_main_role, self.op_net, self.seg_net, test_set, save_dir)
@@ -375,8 +377,7 @@ def find_first_main_role(frame_result, op_net, img_dir):
         first_index = roles[0][0]
     except:
         print('there is no person in this video!')
-        shutil.rmtree(save_dir)
-        sys.exit(0)
+        raise Exception("No person in this video!")
         
     if first_index == max_index:
         return max_index, main_role_coord
