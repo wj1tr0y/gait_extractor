@@ -3,7 +3,7 @@
 @Date: 2019-01-05 14:44:14
 @LastEditors: Jilong Wang
 @Email: jilong.wang@watrix.ai
-@LastEditTime: 2019-01-08 19:01:34
+@LastEditTime: 2019-01-09 11:06:50
 @Description: In this script, we will load a RefineDet model to detect pedestrian and use openpose to check the integrity of each pedestrian.
 finally, we will use a small segmentation model to seg person in each frame then save the result.
 '''
@@ -48,7 +48,7 @@ class PeopleDetection:
         self.transformer.set_channel_swap('data', (2, 1, 0))  # the reference model has channels in BGR order instead of RGB
 
     def detect(self, img_dir):
-        print('Processing {}:'.format(test_set))
+        print('Processing {}:'.format(img_dir))
         img_dir = img_dir
 
         # get all image names and sorted by name
@@ -238,13 +238,30 @@ class PeopleSegmentation:
                            (input_width, input_height)) > self.prob_threshold] = 255
         return np.squeeze(out)
 
-def save_results(frame_main_role, img_dir, save_dir):
+class GaitExtractor:
+    def __init__(self, gpuid, det_batch_size=20):
+        caffe.set_device(int(gpuid))
+        caffe.set_mode_gpu()
+
+        self.det_net, self.op_net, self.seg_net = net_init(det_batch_size=det_batch_size)
+
+    def extract(self, test_set, save_dir):
+        frame_result = self.det_net.detect(test_set)
+        frame_main_role = find_main_role_in_each_frame(frame_result, self.op_net, test_set)
+        start_moving_frame, end_moving_frame = delete_still_frame(frame_main_role)
+        frame_main_role = frame_main_role[start_moving_frame:end_moving_frame]
+        save_results(frame_main_role, self.op_net, self.seg_net, test_set, save_dir)
+
+
+
+
+def save_results(frame_main_role, op_net, seg_net, img_dir, save_dir):
     # if having enough frames, then abort the first 5 frame and last 25 frames in order to have intact person
     if len(frame_main_role) == 0:
         print('no gait extracted in this video.')
         sys.exit(0)
     first_frame = 3
-    last_frame = check_last_1s(frame_main_role, img_dir)
+    last_frame = check_last_1s(frame_main_role, op_net, img_dir)
     print("the frist frame is {}, the last frame is {}".format(frame_main_role[first_frame][0][5:-4], frame_main_role[last_frame-1][0][5:-4]))
     for im_name, coord in frame_main_role[first_frame: last_frame]:
         img = cv2.imread(os.path.join(img_dir, im_name), cv2.IMREAD_COLOR)
@@ -252,7 +269,7 @@ def save_results(frame_main_role, img_dir, save_dir):
         print('Saved: ' + os.path.join(save_dir, im_name[:-4] + '_dets.jpg'))
         sys.stdout.flush()
 
-def check_last_1s(frame_main_role, img_dir):
+def check_last_1s(frame_main_role, op_net, img_dir):
     for i, pack in enumerate(frame_main_role[-25:]):
         im_name, coord = pack
         img = cv2.imread(os.path.join(img_dir, im_name), cv2.IMREAD_COLOR)
@@ -297,12 +314,12 @@ def find_max(results, threshold, shape):
     # check border
     Xmin = 0 if Xmin < 0 else Xmin
     Xmax = 0 if Xmax < 0 else Xmax
-    Xmin = SHAPE[1] if Xmin > SHAPE[1] else Xmin
-    Xmax = SHAPE[1] if Xmax > SHAPE[1] else Xmax
+    Xmin = shape[1] if Xmin > shape[1] else Xmin
+    Xmax = shape[1] if Xmax > shape[1] else Xmax
     Ymin = 0 if Ymin < 0 else Ymin
     Ymax = 0 if Ymax < 0 else Ymax
-    Ymin = SHAPE[0] if Ymin > SHAPE[0] else Ymin
-    Ymax = SHAPE[0] if Ymax > SHAPE[0] else Ymax
+    Ymin = shape[0] if Ymin > shape[0] else Ymin
+    Ymax = shape[0] if Ymax > shape[0] else Ymax
     return Xmin, Xmax, Ymin, Ymax
 
 def is_main_role(coord1, coord2):
@@ -317,13 +334,13 @@ def is_main_role(coord1, coord2):
     x2_center = (coord2[0] + coord2[1])
     y2_center = (coord2[2] + coord2[3])
     distance = (x1_center - x2_center) ** 2 + (y1_center - y2_center) ** 2
-    if distance < (SHAPE[0]*0.3)**2 and x1_center != 0 and y1_center != 0:
+    if distance < (240*0.3)**2 and x1_center != 0 and y1_center != 0:
         return True
     else:
-        print(coord1, coord2, distance)
+        # print(coord1, coord2, distance)
         return False
 
-def find_first_main_role(frame_result):
+def find_first_main_role(frame_result, op_net, img_dir):
     '''
     @description: find the first frame where the main role appear
     @param {frame_result:(im_name, result, shape)} 
@@ -380,14 +397,14 @@ def find_first_main_role(frame_result):
     sys.stdout.flush()
     return first_frame, [xmin, xmax, ymin, ymax]
 
-def find_main_role_in_each_frame(frame_result):
+def find_main_role_in_each_frame(frame_result, op_net, img_dir):
     '''
     @description: when more than one person exist in one frame, find out which person is our main role. And track it from the first frame it appears to the frame it disappears.if the frame doesn't contain the main role, abort it
     @param {detection result(im_name, result, shape)} 
     @return main role's coord in each frame(im_name, coord), 
     '''
     frame_main_role = []
-    first_frame, main_role_coord = find_first_main_role(frame_result)
+    first_frame, main_role_coord = find_first_main_role(frame_result, op_net, img_dir)
 
     # print('first frame is {}'.format(first_frame))
     # sys.stdout.flush()
@@ -411,29 +428,16 @@ def is_moving(coord, still_coord):
     x2_center = (still_coord[0] + still_coord[1])
     y2_center = (still_coord[2] + still_coord[3])
     distance = (x1_center - x2_center) ** 2 + (y1_center - y2_center) ** 2
-    if distance > (SHAPE[0]*0.008)**2:
+    if distance > 4:
         return True
     else:
         return False
         
 def delete_still_frame(frame_main_role):
-    print(len(frame_main_role))
-    main_role_coord = frame_main_role[0][1]
-    for i, pack in enumerate(frame_main_role):
-        _, coord = pack
-        if is_moving(coord, main_role_coord):
-            first_frame = i
-            break
-    reversed_frame_main_role = frame_main_role[:]
-    reversed_frame_main_role.reverse()
-    for i, pack in enumerate(frame_main_role):
-        _, coord = pack
-        if is_moving(coord, main_role_coord):
-            last_frame = len(reversed_frame_main_role) - i
-            break
-    return first_frame, last_frame
+    # for casia_b, `do not delete still frame
+    return 0, len(frame_main_role)
 
-def net_init():
+def net_init(det_batch_size):
     '''
     @description: load detection & openpose & segementation models
     @param {None} 
@@ -467,28 +471,15 @@ if __name__ == '__main__':
     args = parser.parse_args()
     # gpu preparation
     assert len(args.gpuid) == 1, "You only need to choose one gpu. But {} gpus are chosen.".format(args.gpuid)
-    caffe.set_device(int(args.gpuid))
-    caffe.set_mode_gpu()
     
-
     save_dir = args.out_dir
     if not os.path.exists(save_dir):
         os.mkdir(save_dir)
 
-    test_set = args.test_set
-    img = cv2.imread(test_set+'/'+os.listdir(test_set)[0])
-    SHAPE = img.shape
-    img_dir = test_set
-    if not os.path.exists(test_set):
-        print("{} doesn't exists".format(test_set))
+    img_dir = args.test_set
+    if not os.path.exists(img_dir):
+        print("{} doesn't exists".format(img_dir))
         sys.exit(0)
 
-    batch_size = 25
-    # initialize openpose and detect net 
-    det_net, op_net, seg_net = net_init()
-    # do detection
-    frame_result = det_net.detect(test_set)
-    frame_main_role = find_main_role_in_each_frame(frame_result)
-    start_moving_frame, end_moving_frame = delete_still_frame(frame_main_role)
-    frame_main_role = frame_main_role[start_moving_frame:end_moving_frame]
-    save_results(frame_main_role, test_set, save_dir)
+    gait = GaitExtractor(args.gpuid)
+    gait.extract(img_dir, save_dir)
