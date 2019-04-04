@@ -19,7 +19,7 @@ test/*
 # Video files
 *.mp4
 *.avi
-
+*.jpg
 # ignore built file
 *build*
 
